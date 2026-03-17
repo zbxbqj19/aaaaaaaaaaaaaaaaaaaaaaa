@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>랩실/온라인실 예약</title>
+
+<style>
+body { font-family: sans-serif; background:#f4f6fa; }
+.container {
+  max-width:500px; margin:auto; background:white;
+  padding:20px; border-radius:12px;
+}
+input, select, textarea, button {
+  width:100%; padding:12px; margin:8px 0;
+}
+button { background:#2563eb; color:white; border:none; }
+.status { text-align:center; margin-top:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h3>예약 시스템</h3>
+
+<input id="name" placeholder="이름">
+<input id="studentId" placeholder="학번">
+<input type="date" id="date">
+
+<select id="period" onchange="checkRemain()">
+  <option value="7교시">7교시</option>
+  <option value="8교시">8교시</option>
+</select>
+
+<select id="space" onchange="checkRemain()">
+  <option value="랩실1">랩실1</option>
+  <option value="랩실2">랩실2</option>
+  <option value="랩실3">랩실3</option>
+  <option value="랩실4">랩실4</option>
+  <option value="온라인실">온라인실</option>
+</select>
+
+<div id="remain">잔여 좌석: -</div>
+
+<input type="number" id="people" placeholder="인원수">
+<textarea id="reason" placeholder="사유"></textarea>
+
+<button onclick="apply()">신청</button>
+
+<input id="cancelId" placeholder="취소 ID 입력">
+<button onclick="cancel()">신청 취소</button>
+
+<div class="status" id="msg"></div>
+</div>
+
+<script>
+const API = "여기에_URL";
+
+function checkRemain() {
+  fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "status",
+      date: date.value,
+      period: period.value,
+      space: space.value
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    remain.innerText = "잔여 좌석: " + d.remain;
+  });
+}
+
+function apply() {
+  fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "apply",
+      name: name.value,
+      studentId: studentId.value,
+      date: date.value,
+      period: period.value,
+      space: space.value,
+      people: people.value,
+      reason: reason.value
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if (d.status==="success") {
+      msg.innerText = "신청 완료 / ID: " + d.id;
+    } else if (d.status==="duplicate") {
+      msg.innerText = "중복 신청";
+    } else if (d.status==="full") {
+      msg.innerText = "정원 초과";
+    }
+  });
+}
+
+function cancel() {
+  fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "cancel",
+      id: cancelId.value
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    msg.innerText = d.status;
+  });
+}
+</script>
+
+</body>
+</html>
