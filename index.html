@@ -2,128 +2,834 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>랩실/온라인실 예약</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공간 예약 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-body { font-family: sans-serif; background:#f4f6fa; }
-.container {
-  max-width:500px; margin:auto; background:white;
-  padding:20px; border-radius:12px;
-}
-input, select, textarea, button {
-  width:100%; padding:12px; margin:8px 0;
-}
-button { background:#2563eb; color:white; border:none; }
-.status { text-align:center; margin-top:10px; }
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3349;
+    --accent: #4f7cff;
+    --accent2: #7c5cff;
+    --success: #22d3a5;
+    --warn: #f59e42;
+    --error: #f25c5c;
+    --text: #e8eaf2;
+    --muted: #7a7f99;
+    --card-radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 80px;
+    background-image: radial-gradient(ellipse at 70% 10%, #1c224a 0%, transparent 60%),
+                      radial-gradient(ellipse at 10% 80%, #1a1730 0%, transparent 55%);
+  }
+
+  header {
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 36px;
+    text-align: center;
+  }
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 7px 18px 7px 12px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  header h1 span {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── 메인 카드 ── */
+  .card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  /* ── 메뉴 탭 ── */
+  .menu-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+  .menu-tab {
+    flex: 1;
+    padding: 18px 10px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    position: relative;
+    user-select: none;
+  }
+  .menu-tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+    background: rgba(79,124,255,0.05);
+  }
+  .menu-tab:hover:not(.active) {
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+  }
+  .menu-tab .tab-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+
+  /* ── 패널 ── */
+  .panel { display: none; padding: 28px; }
+  .panel.active { display: block; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── 홈 패널 ── */
+  .home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .home-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: var(--text);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .home-btn:hover {
+    border-color: var(--accent);
+    background: rgba(79,124,255,0.08);
+    transform: translateY(-2px);
+  }
+  .home-btn .hb-icon {
+    font-size: 30px;
+    line-height: 1;
+  }
+  .home-btn .hb-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .home-btn .hb-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .notice-box {
+    margin-top: 20px;
+    background: rgba(79,124,255,0.08);
+    border: 1px solid rgba(79,124,255,0.25);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .notice-box strong { color: var(--accent); }
+
+  /* ── 조회 패널 ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+
+  .input-row {
+    display: flex; gap: 10px;
+  }
+  .input-row > * { flex: 1; }
+
+  input[type="date"],
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.6);
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,124,255,0.15);
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7f99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+  /* 좌석 현황 그리드 */
+  .space-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .space-cell {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 6px;
+    text-align: center;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+  .space-cell .sc-name { color: var(--muted); margin-bottom: 6px; font-size: 10px; }
+  .space-cell .sc-remain { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; }
+  .space-cell.ok { border-color: rgba(34,211,165,0.3); background: rgba(34,211,165,0.06); }
+  .space-cell.ok .sc-remain { color: var(--success); }
+  .space-cell.warn { border-color: rgba(245,158,66,0.3); background: rgba(245,158,66,0.06); }
+  .space-cell.warn .sc-remain { color: var(--warn); }
+  .space-cell.full { border-color: rgba(242,92,92,0.3); background: rgba(242,92,92,0.06); }
+  .space-cell.full .sc-remain { color: var(--error); }
+  .space-cell.loading .sc-remain { color: var(--muted); }
+
+  /* ── 버튼 ── */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 11px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 20px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    box-shadow: 0 4px 18px rgba(79,124,255,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,124,255,0.45); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-outline {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { color: var(--text); border-color: var(--accent); }
+
+  /* 신청 결과 */
+  .result-box {
+    margin-top: 18px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.5;
+  }
+  .result-box.show { display: flex; }
+  .result-box.success { background: rgba(34,211,165,0.1); border: 1px solid rgba(34,211,165,0.3); color: var(--success); }
+  .result-box.error   { background: rgba(242,92,92,0.1);  border: 1px solid rgba(242,92,92,0.3);  color: var(--error); }
+  .result-box.info    { background: rgba(79,124,255,0.1); border: 1px solid rgba(79,124,255,0.3); color: var(--accent); }
+  .result-icon { font-size: 20px; flex-shrink: 0; }
+
+  /* 인원수 헬퍼 */
+  .people-row { display: flex; gap: 8px; align-items: center; }
+  .people-row input { flex: 1; }
+  .people-tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* 로딩 스피너 */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 예약 목록 */
+  .reservation-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .res-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .res-badge {
+    background: rgba(79,124,255,0.15);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .res-info { flex: 1; }
+  .res-info .ri-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .res-info .ri-meta { font-size: 12px; color: var(--muted); }
+  .res-status {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .res-status.pending { background: rgba(245,158,66,0.15); color: var(--warn); }
+  .res-status.approved { background: rgba(34,211,165,0.15); color: var(--success); }
+  .res-status.rejected { background: rgba(242,92,92,0.15); color: var(--error); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    padding: 32px 0;
+    font-size: 14px;
+  }
+  .empty-state .es-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* 구분선 */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 22px 0;
+  }
+
+  /* 탑 네비 뒤로가기 */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .back-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--accent); }
+  .panel-title { font-size: 16px; font-weight: 600; }
+
+  /* step indicator */
+  .step-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  .step-seg {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .step-seg.done { background: var(--accent); }
+
+  @media (max-width: 420px) {
+    .home-grid { grid-template-columns: 1fr; }
+    .space-grid { grid-template-columns: repeat(3, 1fr); }
+  }
 </style>
 </head>
-
 <body>
 
-<div class="container">
-<h3>예약 시스템</h3>
+<header>
+  <div class="logo-badge">
+    <span class="logo-dot"></span>
+    공간 예약 시스템
+  </div>
+  <h1>랩실 · 온라인실<br><span>예약 포털</span></h1>
+  <p>빠르고 간편하게 공간을 예약하세요.<br>신청 후 관리자 승인이 필요합니다.</p>
+</header>
 
-<input id="name" placeholder="이름">
-<input id="studentId" placeholder="학번">
-<input type="date" id="date">
+<div class="card">
 
-<select id="period" onchange="checkRemain()">
-  <option value="7교시">7교시</option>
-  <option value="8교시">8교시</option>
-</select>
+  <!-- 탭 -->
+  <div class="menu-tabs">
+    <div class="menu-tab active" onclick="switchTab('home')" id="tab-home">
+      <span class="tab-icon">🏠</span>홈
+    </div>
+    <div class="menu-tab" onclick="switchTab('status')" id="tab-status">
+      <span class="tab-icon">📊</span>좌석 조회
+    </div>
+    <div class="menu-tab" onclick="switchTab('apply')" id="tab-apply">
+      <span class="tab-icon">✍️</span>신청
+    </div>
+    <div class="menu-tab" onclick="switchTab('mypage')" id="tab-mypage">
+      <span class="tab-icon">👤</span>내 예약
+    </div>
+  </div>
 
-<select id="space" onchange="checkRemain()">
-  <option value="랩실1">랩실1</option>
-  <option value="랩실2">랩실2</option>
-  <option value="랩실3">랩실3</option>
-  <option value="랩실4">랩실4</option>
-  <option value="온라인실">온라인실</option>
-</select>
+  <!-- ═══ 홈 패널 ═══ -->
+  <div class="panel active" id="panel-home">
+    <div class="home-grid">
+      <div class="home-btn" onclick="switchTab('status')">
+        <div class="hb-icon">📊</div>
+        <div class="hb-title">좌석 현황</div>
+        <div class="hb-desc">날짜·교시별<br>잔여 좌석 확인</div>
+      </div>
+      <div class="home-btn" onclick="switchTab('apply')">
+        <div class="hb-icon">📝</div>
+        <div class="hb-title">예약 신청</div>
+        <div class="hb-desc">공간 이용<br>신청서 작성</div>
+      </div>
+      <div class="home-btn" onclick="switchTab('mypage')">
+        <div class="hb-icon">🔍</div>
+        <div class="hb-title">내 예약 조회</div>
+        <div class="hb-desc">승인 상태<br>실시간 확인</div>
+      </div>
+      <div class="home-btn" onclick="showGuide()">
+        <div class="hb-icon">📋</div>
+        <div class="hb-title">이용 안내</div>
+        <div class="hb-desc">예약 규정 및<br>이용 방법 확인</div>
+      </div>
+    </div>
 
-<div id="remain">잔여 좌석: -</div>
+    <div class="notice-box">
+      <strong>📌 안내</strong><br>
+      · 최대 인원: 각 랩실 <strong>8명</strong><br>
+      · 예약 교시: <strong>7교시 / 8교시</strong><br>
+      · 신청 후 <strong>관리자 승인</strong>을 받아야 이용 가능합니다.
+    </div>
+  </div>
 
-<input type="number" id="people" placeholder="인원수 (최대 8)">
-<textarea id="reason" placeholder="사유"></textarea>
+  <!-- ═══ 좌석 조회 패널 ═══ -->
+  <div class="panel" id="panel-status">
+    <div class="section-label">날짜 선택</div>
+    <div class="input-row">
+      <input type="date" id="s-date" oninput="fetchStatus()">
+      <select id="s-period" onchange="fetchStatus()">
+        <option value="7교시">7교시</option>
+        <option value="8교시">8교시</option>
+      </select>
+    </div>
 
-<button onclick="apply()">신청</button>
+    <div class="section-label" style="margin-top:20px">공간별 잔여 좌석</div>
+    <div class="space-grid" id="space-grid">
+      <div class="space-cell loading"><div class="sc-name">랩실1</div><div class="sc-remain">-</div></div>
+      <div class="space-cell loading"><div class="sc-name">랩실2</div><div class="sc-remain">-</div></div>
+      <div class="space-cell loading"><div class="sc-name">랩실3</div><div class="sc-remain">-</div></div>
+      <div class="space-cell loading"><div class="sc-name">랩실4</div><div class="sc-remain">-</div></div>
+      <div class="space-cell loading"><div class="sc-name">온라인실</div><div class="sc-remain">-</div></div>
+    </div>
 
-<div class="status" id="msg"></div>
+    <button class="btn btn-primary" style="margin-top:20px" onclick="switchTab('apply')">
+      ✍️ 예약 신청하기
+    </button>
+  </div>
+
+  <!-- ═══ 신청 패널 ═══ -->
+  <div class="panel" id="panel-apply">
+
+    <div class="step-bar">
+      <div class="step-seg done" id="step1"></div>
+      <div class="step-seg" id="step2"></div>
+      <div class="step-seg" id="step3"></div>
+    </div>
+
+    <div class="section-label">신청자 정보</div>
+    <input type="text" id="a-name" placeholder="이름" oninput="updateSteps()">
+    <input type="text" id="a-studentId" placeholder="학번" oninput="updateSteps()">
+
+    <div class="divider"></div>
+
+    <div class="section-label">예약 정보</div>
+    <div class="input-row">
+      <input type="date" id="a-date" oninput="onApplyDateChange()">
+      <select id="a-period" onchange="onApplyDateChange()">
+        <option value="7교시">7교시</option>
+        <option value="8교시">8교시</option>
+      </select>
+    </div>
+
+    <div style="margin-top:10px"></div>
+    <select id="a-space" onchange="onApplyDateChange()">
+      <option value="">공간 선택</option>
+      <option value="랩실1">랩실1</option>
+      <option value="랩실2">랩실2</option>
+      <option value="랩실3">랩실3</option>
+      <option value="랩실4">랩실4</option>
+      <option value="온라인실">온라인실</option>
+    </select>
+
+    <div id="a-remain-box" style="margin-top:10px; font-size:13px; color:var(--muted); min-height:20px;"></div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">인원 및 사유</div>
+    <div class="people-row">
+      <input type="number" id="a-people" placeholder="인원수" min="1" max="8" oninput="updateSteps()">
+      <span class="people-tag">최대 8명</span>
+    </div>
+    <textarea id="a-reason" placeholder="사용 목적과 사유를 상세히 작성하세요 (예: 팀 프로젝트 회의, 3명 예정)" oninput="updateSteps()" style="margin-top:10px"></textarea>
+
+    <button class="btn btn-primary" id="apply-btn" onclick="applyReservation()" disabled>
+      신청하기
+    </button>
+
+    <div class="result-box" id="apply-result">
+      <span class="result-icon"></span>
+      <span id="apply-result-msg"></span>
+    </div>
+  </div>
+
+  <!-- ═══ 내 예약 패널 ═══ -->
+  <div class="panel" id="panel-mypage">
+    <div class="section-label">학번으로 조회</div>
+    <div class="input-row">
+      <input type="text" id="m-studentId" placeholder="학번 입력">
+      <button class="btn btn-primary" style="width:auto; margin-top:0; padding:12px 18px; flex-shrink:0" onclick="fetchMyReservations()">조회</button>
+    </div>
+
+    <div id="my-result" style="margin-top:16px">
+      <div class="empty-state">
+        <div class="es-icon">🔍</div>
+        학번을 입력하고 조회하세요
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 이용 안내 모달 -->
+<div id="guide-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; max-width:460px; width:100%; padding:28px; max-height:80vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="font-size:16px;">📋 이용 안내</h3>
+      <button onclick="document.getElementById('guide-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="font-size:14px; color:var(--muted); line-height:1.9;">
+      <strong style="color:var(--text);">🏫 공간 안내</strong><br>
+      · 랩실 1~4실: 각 최대 8명<br>
+      · 온라인실: 최대 8명<br><br>
+      <strong style="color:var(--text);">⏰ 이용 가능 시간</strong><br>
+      · 7교시 / 8교시<br><br>
+      <strong style="color:var(--text);">📝 신청 방법</strong><br>
+      1. 좌석 현황에서 잔여 좌석 확인<br>
+      2. 예약 신청 탭에서 정보 입력<br>
+      3. 관리자 승인 후 이용 가능<br><br>
+      <strong style="color:var(--text);">⚠️ 유의 사항</strong><br>
+      · 동일 시간대 중복 신청 불가<br>
+      · 정원 초과 시 신청 불가<br>
+      · 신청 사유는 구체적으로 작성 권장<br>
+      · 승인 전 취소는 관리자에게 문의
+    </div>
+  </div>
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbziQNgkQDgXVPA-f4R9e-w5Br940-pF4n6rUarHBr7sEE5y_eAZEZChYSmOA1mRbPUS/exec";
+const API = "https://script.google.com/macros/s/AKfycbzMGCoM-qwYglyZS_bAvZSSpGjanwbOTfpZPSqpGTzA4qAGOAcf-Hk5rfDDeBoi8KVR/exec";
+const SPACES = ["랩실1","랩실2","랩실3","랩실4","온라인실"];
+const CAPACITY = 8;
 
-// 잔여 좌석 확인
-function checkRemain() {
-  if (!date.value) return;
-
-  fetch(API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      action: "status",
-      date: date.value,
-      period: period.value,
-      space: space.value
-    })
-  })
-  .then(r => r.json())
-  .then(d => {
-    remain.innerText = "잔여 좌석: " + d.remain;
-  })
-  .catch(() => {
-    remain.innerText = "조회 실패";
-  });
+// ── 탭 전환 ──
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'status') {
+    const d = document.getElementById('s-date');
+    if (!d.value) { d.value = todayStr(); fetchStatus(); }
+  }
+  if (name === 'apply') {
+    const d = document.getElementById('a-date');
+    if (!d.value) d.value = todayStr();
+  }
 }
 
-// 신청
-function apply() {
-  if (!name.value || !studentId.value || !date.value || !reason.value) {
-    alert("모든 항목을 입력하세요");
-    return;
-  }
+function todayStr() {
+  return new Date().toISOString().slice(0,10);
+}
 
-  if (people.value > 8) {
-    alert("최대 8명까지 가능합니다");
-    return;
-  }
+function showGuide() {
+  document.getElementById('guide-modal').style.display = 'flex';
+}
 
-  fetch(API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      action: "apply",
-      name: name.value,
-      studentId: studentId.value,
-      date: date.value,
-      period: period.value,
-      space: space.value,
-      people: people.value,
-      reason: reason.value
+// ── 좌석 조회 ──
+function fetchStatus() {
+  const date = document.getElementById('s-date').value;
+  const period = document.getElementById('s-period').value;
+  if (!date) return;
+
+  const grid = document.getElementById('space-grid');
+  grid.innerHTML = SPACES.map(s => `
+    <div class="space-cell loading">
+      <div class="sc-name">${s}</div>
+      <div class="sc-remain">⏳</div>
+    </div>
+  `).join('');
+
+  callAPI({ action: 'statusAll', date, period })
+    .then(data => {
+      const remains = data.remains || {};
+      grid.innerHTML = SPACES.map(s => {
+        const r = remains[s] !== undefined ? remains[s] : CAPACITY;
+        let cls = r >= 5 ? 'ok' : r >= 2 ? 'warn' : r === 0 ? 'full' : 'warn';
+        return `
+          <div class="space-cell ${cls}">
+            <div class="sc-name">${s}</div>
+            <div class="sc-remain">${r}</div>
+          </div>
+        `;
+      }).join('');
     })
-  })
-  .then(r => r.json())
-  .then(d => {
-    if (d.status === "success") {
-      msg.innerText = "신청 완료 (관리자 승인 대기)";
-    } else if (d.status === "duplicate") {
-      msg.innerText = "이미 해당 시간에 신청됨";
-    } else if (d.status === "full") {
-      msg.innerText = "정원 초과";
+    .catch(() => {
+      // fallback: query each individually
+      Promise.all(SPACES.map(space =>
+        callAPI({ action: 'status', date, period, space })
+          .then(d => ({ space, remain: d.remain !== undefined ? d.remain : '?' }))
+          .catch(() => ({ space, remain: '?' }))
+      )).then(results => {
+        grid.innerHTML = results.map(({space, remain}) => {
+          let cls = remain >= 5 ? 'ok' : remain >= 2 ? 'warn' : remain === 0 ? 'full' : 'warn';
+          if (remain === '?') cls = 'loading';
+          return `
+            <div class="space-cell ${cls}">
+              <div class="sc-name">${space}</div>
+              <div class="sc-remain">${remain}</div>
+            </div>
+          `;
+        }).join('');
+      });
+    });
+}
+
+// ── 신청 폼 유효성 ──
+function onApplyDateChange() {
+  updateSteps();
+  const date = document.getElementById('a-date').value;
+  const period = document.getElementById('a-period').value;
+  const space = document.getElementById('a-space').value;
+  const box = document.getElementById('a-remain-box');
+  if (!date || !space) { box.innerHTML = ''; return; }
+  box.innerHTML = '<span style="opacity:0.5">좌석 확인 중...</span>';
+  callAPI({ action: 'status', date, period, space })
+    .then(d => {
+      const r = d.remain !== undefined ? d.remain : '?';
+      const color = r === 0 ? 'var(--error)' : r <= 3 ? 'var(--warn)' : 'var(--success)';
+      box.innerHTML = `<span style="color:${color}; font-weight:600;">${space} 잔여 좌석: ${r}석</span>`;
+    })
+    .catch(() => { box.innerHTML = '<span style="color:var(--muted)">좌석 조회 실패</span>'; });
+}
+
+function updateSteps() {
+  const name = document.getElementById('a-name').value.trim();
+  const id = document.getElementById('a-studentId').value.trim();
+  const date = document.getElementById('a-date').value;
+  const space = document.getElementById('a-space').value;
+  const people = document.getElementById('a-people').value;
+  const reason = document.getElementById('a-reason').value.trim();
+
+  const s1 = name && id;
+  const s2 = s1 && date && space;
+  const s3 = s2 && people && reason;
+
+  document.getElementById('step1').className = 'step-seg done';
+  document.getElementById('step2').className = 'step-seg' + (s1 ? ' done' : '');
+  document.getElementById('step3').className = 'step-seg' + (s2 ? ' done' : '');
+
+  document.getElementById('apply-btn').disabled = !s3;
+}
+
+// ── 신청 ──
+async function applyReservation() {
+  const btn = document.getElementById('apply-btn');
+  const resultBox = document.getElementById('apply-result');
+  const resultMsg = document.getElementById('apply-result-msg');
+
+  const name = document.getElementById('a-name').value.trim();
+  const studentId = document.getElementById('a-studentId').value.trim();
+  const date = document.getElementById('a-date').value;
+  const period = document.getElementById('a-period').value;
+  const space = document.getElementById('a-space').value;
+  const people = parseInt(document.getElementById('a-people').value);
+  const reason = document.getElementById('a-reason').value.trim();
+
+  if (people > 8 || people < 1) {
+    showResult('error', '⚠️', '인원수는 1~8명 사이여야 합니다.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> 신청 중...';
+  resultBox.className = 'result-box';
+
+  try {
+    const data = await callAPI({ action: 'apply', name, studentId, date, period, space, people, reason });
+    if (data.status === 'success') {
+      showResult('success', '✅', '신청 완료! 관리자 승인 후 이용 가능합니다.');
+      // 폼 초기화
+      ['a-name','a-studentId','a-people','a-reason'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('a-space').value = '';
+      document.getElementById('a-remain-box').innerHTML = '';
+    } else if (data.status === 'duplicate') {
+      showResult('error', '⛔', '이미 해당 날짜·시간에 신청 내역이 있습니다.');
+    } else if (data.status === 'full') {
+      showResult('error', '🚫', '선택한 공간의 정원이 초과되었습니다.');
     } else {
-      msg.innerText = "오류 발생";
+      showResult('error', '❌', '오류가 발생했습니다. 다시 시도해주세요.');
     }
-  })
-  .catch(() => {
-    msg.innerText = "서버 연결 실패";
+  } catch(e) {
+    showResult('error', '📡', '서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '신청하기';
+  updateSteps();
+}
+
+function showResult(type, icon, msg) {
+  const box = document.getElementById('apply-result');
+  const msgEl = document.getElementById('apply-result-msg');
+  box.className = `result-box show ${type}`;
+  box.querySelector('.result-icon').textContent = icon;
+  msgEl.textContent = msg;
+}
+
+// ── 내 예약 조회 ──
+async function fetchMyReservations() {
+  const studentId = document.getElementById('m-studentId').value.trim();
+  const resultDiv = document.getElementById('my-result');
+  if (!studentId) {
+    resultDiv.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div>학번을 입력해주세요</div>';
+    return;
+  }
+  resultDiv.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div>조회 중...</div>';
+  try {
+    const data = await callAPI({ action: 'myReservations', studentId });
+    const list = data.reservations || [];
+    if (list.length === 0) {
+      resultDiv.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div>예약 내역이 없습니다</div>';
+      return;
+    }
+    resultDiv.innerHTML = `
+      <div class="section-label">${list.length}건의 예약 내역</div>
+      <div class="reservation-list">
+        ${list.map(r => {
+          const statusMap = { pending: ['pending','대기중'], approved: ['approved','승인됨'], rejected: ['rejected','거절됨'] };
+          const [cls, label] = statusMap[r.status] || ['pending','대기중'];
+          return `
+            <div class="res-item">
+              <div class="res-badge">${r.space || '-'}</div>
+              <div class="res-info">
+                <div class="ri-title">${r.date || ''} · ${r.period || ''}</div>
+                <div class="ri-meta">${r.name || ''} · ${r.people || '?'}명 · ${r.reason ? r.reason.slice(0,20)+'...' : ''}</div>
+              </div>
+              <div class="res-status ${cls}">${label}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } catch(e) {
+    resultDiv.innerHTML = '<div class="empty-state"><div class="es-icon">📡</div>조회 실패. 다시 시도해주세요.</div>';
+  }
+}
+
+// ── API 공통 호출 ──
+function callAPI(body) {
+  return fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' }, // CORS 우회: text/plain 사용
+    body: JSON.stringify(body)
+  }).then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
   });
 }
-</script>
 
+// 초기 날짜 세팅
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('a-date').value = todayStr();
+});
+</script>
 </body>
 </html>
