@@ -43,13 +43,10 @@ button { background:#2563eb; color:white; border:none; }
 
 <div id="remain">잔여 좌석: -</div>
 
-<input type="number" id="people" placeholder="인원수">
+<input type="number" id="people" placeholder="인원수 (최대 8)">
 <textarea id="reason" placeholder="사유"></textarea>
 
 <button onclick="apply()">신청</button>
-
-<input id="cancelId" placeholder="취소 ID 입력">
-<button onclick="cancel()">신청 취소</button>
 
 <div class="status" id="msg"></div>
 </div>
@@ -57,9 +54,15 @@ button { background:#2563eb; color:white; border:none; }
 <script>
 const API = "https://script.google.com/macros/s/AKfycbwOJKLW0VKEifas3cjKaYSDcIm3He-RdiWUmcGZ47LMmdqwGCIm5H5z3h00kYzdqspW/exec";
 
+// 잔여 좌석 확인
 function checkRemain() {
+  if (!date.value) return;
+
   fetch(API, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       action: "status",
       date: date.value,
@@ -67,15 +70,32 @@ function checkRemain() {
       space: space.value
     })
   })
-  .then(r=>r.json())
-  .then(d=>{
+  .then(r => r.json())
+  .then(d => {
     remain.innerText = "잔여 좌석: " + d.remain;
+  })
+  .catch(() => {
+    remain.innerText = "조회 실패";
   });
 }
 
+// 신청
 function apply() {
+  if (!name.value || !studentId.value || !date.value || !reason.value) {
+    alert("모든 항목을 입력하세요");
+    return;
+  }
+
+  if (people.value > 8) {
+    alert("최대 8명까지 가능합니다");
+    return;
+  }
+
   fetch(API, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       action: "apply",
       name: name.value,
@@ -87,29 +107,20 @@ function apply() {
       reason: reason.value
     })
   })
-  .then(r=>r.json())
-  .then(d=>{
-    if (d.status==="success") {
-      msg.innerText = "신청 완료 / ID: " + d.id;
-    } else if (d.status==="duplicate") {
-      msg.innerText = "중복 신청";
-    } else if (d.status==="full") {
+  .then(r => r.json())
+  .then(d => {
+    if (d.status === "success") {
+      msg.innerText = "신청 완료 (관리자 승인 대기)";
+    } else if (d.status === "duplicate") {
+      msg.innerText = "이미 해당 시간에 신청됨";
+    } else if (d.status === "full") {
       msg.innerText = "정원 초과";
+    } else {
+      msg.innerText = "오류 발생";
     }
-  });
-}
-
-function cancel() {
-  fetch(API, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "cancel",
-      id: cancelId.value
-    })
   })
-  .then(r=>r.json())
-  .then(d=>{
-    msg.innerText = d.status;
+  .catch(() => {
+    msg.innerText = "서버 연결 실패";
   });
 }
 </script>
